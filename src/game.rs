@@ -11,7 +11,15 @@ pub fn run() {
     loop {
         println!("Player {}, it is your turn.", get_display_value(curr_player));
 
-        let player_move = get_player_move();
+        let mut player_move: (u8, u8);
+        loop {
+            player_move = get_player_move();
+
+            if move_is_valid(&board, player_move) {
+                break;
+            }
+            println!("Please select an open space on the board.");
+        }
 
         try_move(&mut board, player_move, curr_player);
 
@@ -60,16 +68,36 @@ fn get_display_value(val: i8) -> &'static str {
 
 fn get_player_move() -> (u8, u8) {
     println!("Enter your move as a comma separated pair of 0-based indices");
-    let mut player_move: String = String::new();
+    
+    let mut x_res: Result<u8, _>;
+    let mut y_res: Result<u8, _>;
+    let mut x: u8;
+    let mut y: u8;
 
-    stdin().read_line(&mut player_move).unwrap();
+    loop {
+        let mut player_move: String = String::new();
+        stdin().read_line(&mut player_move).unwrap();
 
-    println!("You have entered {}", player_move.trim());
+        let decoded_move: Vec<&str> = player_move.trim().split(",").collect();
 
-    let decoded_move: Vec<&str> = player_move.trim().split(",").collect();
+        if decoded_move.len() != 2 {
+            println!("Please enter a valid move.");
+            continue;
+        }
 
-    let x: u8 = decoded_move[0].parse().unwrap();
-    let y: u8 = decoded_move[1].parse().unwrap();
+        x_res = decoded_move[0].parse();
+        y_res = decoded_move[1].parse();
+
+        if x_res.is_err() || y_res.is_err() {
+            println!("Please enter a valid move.");
+        } else {
+            x = x_res.unwrap();
+            y = y_res.unwrap();
+            println!("You have selected {}, {}", x, y);
+            break;
+        }
+    }
+    
 
     return (x, y);
 }
@@ -79,34 +107,35 @@ fn try_move<'a>(board: &mut [[i8; 3]; 3], player_move: (u8, u8), val: i8) {
 }
 
 fn check_win(board: &[[i8; 3]; 3], player: i8) -> bool {
-   if board[0][0] == player && board[0][1] == player && board[0][2] == player {
-    return true;
-   }
-   if board[1][0] == player && board[1][1] == player && board[1][2] == player {
-    return true;
-   }
-   if board[2][0] == player && board[2][1] == player && board[2][2] == player {
-    return true;
-   }
+   return check_columns(board, player) || check_rows(board, player) || check_diagonals(board, player);
+}
 
-   if board[0][0] == player && board[1][0] == player && board[2][0] == player {
-    return true
-   }
-   if board[0][1] == player && board[1][1] == player && board[2][1] == player {
-    return true
-   }
-   if board[0][2] == player && board[1][2] == player && board[2][2] == player {
-    return true
-   }
+fn check_rows(board: &[[i8; 3]; 3], player: i8) -> bool {
+    for i in 0..3 {
+        if (board[i][0] == player && board[i][1] == player && board[i][2] == player) {
+            return true;
+        }
+    }
+    return false;
+}
 
-   if board[0][0] == player && board[1][1] == player && board[2][2] == player {
-    return true
-   }
-   if board[2][0] == player && board[1][1] == player && board[0][2] == player {
-    return true
-   }
+fn check_columns(board: &[[i8; 3]; 3], player: i8) -> bool {
+    for i in 0..3 {
+        if (board[0][i] == player && board[1][i] == player && board[2][i] == player) {
+            return true;
+        }
+    }
+    return false;
+}
 
-   return false;
+fn check_diagonals(board: &[[i8; 3]; 3], player: i8) -> bool {
+    if board[0][0] == player && board[1][1] == player && board[2][2] == player {
+        return true
+    }
+    if board[2][0] == player && board[1][1] == player && board[0][2] == player {
+        return true
+    }
+    return false;
 }
 
 fn is_board_full(board: &[[i8; 3]; 3]) -> bool {
@@ -117,5 +146,17 @@ fn is_board_full(board: &[[i8; 3]; 3]) -> bool {
             }
         }
     }
+    return true;
+}
+
+fn move_is_valid(board: &[[i8; 3]; 3], player_move: (u8, u8)) -> bool {
+    if player_move.0 > 2 || player_move.1 > 2 {
+        return false;
+    }
+
+    if board[player_move.1 as usize][player_move.0 as usize] != 0 {
+        return false;
+    }
+
     return true;
 }
