@@ -4,7 +4,6 @@ pub fn run() {
     println!("Welcome to Tic Tac Toe.");
 
     let mut board: [[i8; 3]; 3] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-    let mut is_tie = false;
     let mut is_win = false;
     let mut curr_player: i8 = 1;
     draw_board(&board);
@@ -24,7 +23,6 @@ pub fn run() {
         }
 
         if is_board_full(&board) {
-            is_tie = true;
             break;
         }
 
@@ -39,7 +37,7 @@ pub fn run() {
 
     if is_win {
         println!("Player {} wins!", get_display_value(curr_player));
-    } else if is_tie {
+    } else  {
         println!("It is a tie!");
     }
 }
